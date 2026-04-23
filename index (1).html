@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Durian Data Master - Final Lomba</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pastel-brown: #FDFCF0;
+            --deep-brown: #5C4033;
+            --accent-green: #15803d;
+            --primary-tan: #D2B48C;
+        }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--pastel-brown); 
+            color: var(--deep-brown);
+            min-height: 100vh;
+            margin: 0;
+        }
+        .game-screen { display: none; }
+        .game-screen.active { display: flex; animation: fadeIn 0.4s ease-out; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .btn-option {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid #EADDCA;
+        }
+        .btn-option:hover { border-color: #D2B48C; background-color: #FFF; transform: translateX(5px); }
+        .btn-option:active { transform: scale(0.98); }
+
+        .shake { animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #FDFCF0; }
+        ::-webkit-scrollbar-thumb { background: #D2B48C; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex flex-col">
+
+    <!-- HUD / Navigation -->
+    <nav id="hud" class="hidden p-4 md:p-6 flex items-center justify-between sticky top-0 bg-[#FDFCF0]/90 backdrop-blur-md z-50 border-b border-[#EADDCA]">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-[#8B4513] rounded-xl flex items-center justify-center shadow-lg">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+            </div>
+            <div>
+                <div id="lvl-display" class="text-[9px] font-black text-[#D2B48C] uppercase tracking-widest leading-none">LEVEL 01</div>
+                <div id="score-display" class="text-xl font-black text-[#5C4033] leading-none mt-1">0</div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-full border-2 border-[#EADDCA] shadow-sm">
+            <div id="timer-dot" class="w-2 h-2 rounded-full bg-green-500"></div>
+            <span id="timer-display" class="font-black text-sm text-[#5C4033] font-mono">15s</span>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow flex flex-col items-center p-4 md:p-8 overflow-y-auto">
+        
+        <!-- START SCREEN -->
+        <section id="screen-start" class="game-screen active flex-col items-center justify-center text-center py-10 w-full max-w-md">
+            <div class="relative mb-10">
+                <div class="absolute -top-12 -right-6 text-7xl animate-bounce">🏸</div>
+                <h1 class="text-6xl font-black text-[#5C4033] leading-tight tracking-tighter">
+                    DURIAN<br><span class="text-[#A0522D] italic font-serif">MASTER</span>
+                </h1>
+                <p class="text-[10px] font-black tracking-[0.4em] text-[#D2B48C] mt-2 uppercase">Analisis Data Adventure</p>
+            </div>
+            
+            <div class="bg-white p-8 rounded-[3rem] border-2 border-[#EADDCA] shadow-sm mb-10">
+                <p class="text-sm font-medium text-stone-500 leading-relaxed italic">
+                    "Betul, betul, betul! Bantu Upin & Ipin mengumpulkan durian dengan cara menjawab tantangan data!"
+                </p>
+            </div>
+
+            <button onclick="startGame()" class="w-full py-6 bg-[#8B4513] text-white rounded-[2rem] font-black text-xl shadow-2xl shadow-stone-300 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3">
+                MULAI PETUALANGAN <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+            </button>
+        </section>
+
+        <!-- PLAYING SCREEN -->
+        <section id="screen-game" class="game-screen flex-col w-full max-w-xl space-y-6">
+            <div id="game-card" class="bg-white p-8 rounded-[3.5rem] border-4 border-white shadow-2xl space-y-8">
+                <!-- Char & Question -->
+                <div class="flex items-center gap-5">
+                    <div class="w-20 h-20 bg-[#FCF8F1] rounded-[1.5rem] border-2 border-[#EADDCA] flex items-center justify-center text-5xl shadow-inner" id="char-emoji">👦🏻</div>
+                    <div>
+                        <h3 id="char-name" class="font-black text-xl text-[#5C4033]">Uncle Muthu</h3>
+                        <div class="bg-[#EADDCA] h-1.5 w-24 rounded-full mt-1">
+                            <div id="progress-bar" class="bg-[#8B4513] h-full rounded-full transition-all duration-500" style="width: 10%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <p id="question-text" class="text-xl font-extrabold text-stone-800 leading-tight">Pertanyaan akan muncul di sini?</p>
+                    <div id="visual-hint" class="p-4 bg-stone-50 rounded-2xl border border-stone-100 italic text-[11px] text-stone-400">
+                        Petunjuk: Cari data yang paling tepat.
+                    </div>
+                </div>
+
+                <!-- Options -->
+                <div id="options-container" class="grid grid-cols-1 gap-3">
+                    <!-- Buttons Injected via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- RESULT SCREEN -->
+        <section id="screen-result" class="game-screen flex-col items-center justify-center text-center py-10 w-full max-w-md">
+            <div class="w-40 h-40 bg-white rounded-[4rem] shadow-2xl flex items-center justify-center text-8xl mb-8 border-8 border-[#FDFCF0] outline outline-2 outline-[#EADDCA] rotate-3">🏆</div>
+            <h2 class="text-4xl font-black text-[#5C4033] mb-2 uppercase">Hebat Betul!</h2>
+            <p class="text-stone-400 font-bold text-xs tracking-widest uppercase mb-10">Kamu Master Data Kampung</p>
+            
+            <div class="bg-[#8B4513] p-10 rounded-[3.5rem] text-white shadow-2xl w-full mb-10">
+                <p class="text-[10px] font-bold uppercase tracking-[0.4em] opacity-60">Skor Akhir</p>
+                <div id="final-score" class="text-7xl font-black mt-2">0</div>
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-5 bg-white border-4 border-[#EADDCA] text-[#8B4513] rounded-full font-black text-lg hover:bg-stone-50 transition-colors">MAIN LAGI</button>
+        </section>
+
+        <!-- GAMEOVER SCREEN -->
+        <section id="screen-over" class="game-screen flex-col items-center justify-center text-center py-10 w-full max-w-md">
+            <div class="text-9xl mb-8">⏰</div>
+            <h2 class="text-4xl font-black text-red-600 mb-4">WADUH, WAKTU HABIS!</h2>
+            <p class="text-stone-500 font-medium italic mb-10">"Ayo lebih cepat lagi, betul betul betul!"</p>
+            <button onclick="location.reload()" class="w-full py-5 bg-[#5C4033] text-white rounded-full font-black text-lg">COBA LAGI</button>
+        </section>
+
+    </main>
+
+    <!-- FEEDBACK OVERLAY -->
+    <div id="feedback-overlay" class="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none opacity-0 transition-all duration-300">
+        <div id="feedback-card" class="p-10 rounded-[3rem] shadow-2xl flex flex-col items-center transform scale-75 transition-transform duration-300">
+            <div id="fb-icon" class="text-7xl mb-4">✅</div>
+            <h2 id="fb-text" class="text-2xl font-black text-white uppercase italic">MANTAP!</h2>
+        </div>
+    </div>
+
+    <!-- Footer Decor -->
+    <footer class="p-8 text-center text-[9px] font-black text-stone-300 uppercase tracking-[0.5em] pointer-events-none">
+        © 2024 Durian Data Adventure • Unit 6 Kelas 8
+    </footer>
+
+    <script>
+        // --- DATA LEVEL (10 LEVEL LENGKAP) ---
+        const levelData = [
+            { id: 1, name: "Kedai Uncle Muthu", char: "👨🏾‍🍳", q: "Manakah yang merupakan tipe data angka murni (Integer)?", opts: ["RM 5.00", "5", "Lima Ringgit"], ans: 1, hint: "Petunjuk: Angka tanpa huruf." },
+            { id: 2, name: "Mail 2 Ringgit", char: "👦🏻", q: "Jika Mail punya 2 durian seharga 4 ringgit, berapa harga 1 durian?", opts: ["RM 1", "RM 2", "RM 3"], ans: 1, hint: "Petunjuk: Analisis pembagian." },
+            { id: 3, name: "Kebun Tok Dalang", char: "👴🏼", q: "Grafik apa yang paling pas untuk melihat tren kenaikan panen durian?", opts: ["Grafik Batang", "Grafik Garis", "Grafik Lingkaran"], ans: 1, hint: "Petunjuk: Tren waktu." },
+            { id: 4, name: "Ipin & Kak Ros", char: "👦🏻", q: "Rumus Excel untuk menjumlahkan semua harga durian adalah...", opts: ["=SUM()", "=AVERAGE()", "=COUNT()"], ans: 0, hint: "Petunjuk: Penjumlahan." },
+            { id: 5, name: "Ehsan Sang Ketua", char: "👦🏻", q: "Data yang berupa teks atau huruf disebut tipe data?", opts: ["Boolean", "String", "Float"], ans: 1, hint: "Petunjuk: Teks." },
+            { id: 6, name: "Jarjit Berpantun", char: "👦🏾", q: "VLOOKUP digunakan untuk mencari data secara...", opts: ["Vertikal (Tegak)", "Horizontal (Datar)", "Bebas"], ans: 0, hint: "Petunjuk: V = Vertikal." },
+            { id: 7, name: "Mei Mei Pintar", char: "👧🏻", q: "Jika sel A1 berisi 10 dan A2 berisi 5, hasil =A1>A2 adalah?", opts: ["Salah", "Benar (TRUE)", "Error"], ans: 1, hint: "Petunjuk: Perbandingan." },
+            { id: 8, name: "Susanti Hobi Foto", char: "👧🏻", q: "File excel biasanya memiliki format akhiran...", opts: [".docx", ".pptx", ".xlsx"], ans: 2, hint: "Petunjuk: Excel." },
+            { id: 9, name: "Fizi Rajin", char: "👦🏼", q: "Fungsi untuk mencari nilai tertinggi dalam sekelompok data adalah?", opts: ["MIN", "MAX", "IF"], ans: 1, hint: "Petunjuk: Maximum." },
+            { id: 10, name: "Upin Sayang Opah", char: "👦🏻", q: "Simbol perkalian dalam rumus excel dilambangkan dengan?", opts: ["x", ":", "*"], ans: 2, hint: "Petunjuk: Bintang." }
+        ];
+
+        // --- GAME STATE ---
+        let currentLvl = 0;
+        let score = 0;
+        let timeLeft = 15;
+        let timer;
+
+        // --- AUDIO ENGINE ---
+        function speak(msg) {
+            if ('speechSynthesis' in window) {
+                const synth = window.speechSynthesis;
+                const utterance = new SpeechSynthesisUtterance(msg);
+                utterance.lang = 'id-ID';
+                utterance.rate = 1.1;
+                synth.speak(utterance);
+            }
+        }
+
+        function playDing(isCorrect) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = isCorrect ? 880 : 220;
+            osc.type = 'sine';
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.5);
+        }
+
+        // --- GAME CORE ---
+        function showScreen(id) {
+            document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function startGame() {
+            currentLvl = 0;
+            score = 0;
+            document.getElementById('hud').classList.remove('hidden');
+            loadLevel();
+            showScreen('screen-game');
+            speak("Ayo mulai petualangan data!");
+        }
+
+        function loadLevel() {
+            const data = levelData[currentLvl];
+            
+            // HUD Update
+            document.getElementById('lvl-display').innerText = `LEVEL ${String(data.id).padStart(2, '0')}`;
+            document.getElementById('score-display').innerText = score;
+            document.getElementById('progress-bar').style.width = `${(data.id / 10) * 100}%`;
+            
+            // Content Update
+            document.getElementById('char-emoji').innerText = data.char;
+            document.getElementById('char-name').innerText = data.name;
+            document.getElementById('question-text').innerText = data.q;
+            document.getElementById('visual-hint').innerText = data.hint;
+            
+            // Options Injection
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            data.opts.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = "btn-option w-full p-4 bg-white rounded-2xl text-left flex items-center gap-4 font-bold shadow-sm group";
+                btn.innerHTML = `
+                    <div class="w-10 h-10 bg-[#FCF8F1] rounded-lg flex items-center justify-center text-[#8B4513] group-hover:bg-[#8B4513] group-hover:text-white transition-colors">${index + 1}</div>
+                    <span class="text-stone-700">${opt}</span>
+                `;
+                btn.onclick = () => checkAnswer(index);
+                container.appendChild(btn);
+            });
+
+            resetTimer();
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            timeLeft = 15;
+            updateTimerUI();
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                if(timeLeft <= 0) {
+                    clearInterval(timer);
+                    showScreen('screen-over');
+                    speak("Waktu habis, sayang sekali!");
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const el = document.getElementById('timer-display');
+            const dot = document.getElementById('timer-dot');
+            el.innerText = `${timeLeft}s`;
+            if(timeLeft <= 5) {
+                el.classList.add('text-red-600');
+                dot.classList.add('bg-red-500', 'animate-ping');
+            } else {
+                el.classList.remove('text-red-600');
+                dot.classList.remove('bg-red-500', 'animate-ping');
+                dot.classList.add('bg-green-500');
+            }
+        }
+
+        function checkAnswer(idx) {
+            const data = levelData[currentLvl];
+            const isCorrect = idx === data.ans;
+            
+            const overlay = document.getElementById('feedback-overlay');
+            const card = document.getElementById('feedback-card');
+            const fbIcon = document.getElementById('fb-icon');
+            const fbText = document.getElementById('fb-text');
+
+            clearInterval(timer);
+            playDing(isCorrect);
+
+            if(isCorrect) {
+                score += (timeLeft * 10) + 100;
+                fbIcon.innerText = "✅";
+                fbText.innerText = "BETUL BETUL BETUL!";
+                card.className = "p-10 rounded-[3rem] shadow-2xl flex flex-col items-center bg-green-600 text-white";
+                speak("Betul betul betul!");
+            } else {
+                fbIcon.innerText = "❌";
+                fbText.innerText = "ADUH, SALAH!";
+                card.className = "p-10 rounded-[3rem] shadow-2xl flex flex-col items-center bg-red-600 text-white shake";
+                speak("Aduh, salah!");
+            }
+
+            overlay.style.opacity = "1";
+            card.style.transform = "scale(1)";
+
+            setTimeout(() => {
+                overlay.style.opacity = "0";
+                card.style.transform = "scale(0.75)";
+                
+                if(isCorrect) {
+                    currentLvl++;
+                    if(currentLvl < levelData.length) {
+                        loadLevel();
+                    } else {
+                        finishGame();
+                    }
+                } else {
+                    resetTimer(); // Resume if wrong, but no level up
+                }
+            }, 1500);
+        }
+
+        function finishGame() {
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('final-score').innerText = score;
+            showScreen('screen-result');
+            speak("Selamat! Kamu berhasil menjadi juara data kampung durian runtuh!");
+        }
+
+        // Initialize
+        window.onload = () => {
+            showScreen('screen-start');
+        };
+    </script>
+</body>
+</html>
